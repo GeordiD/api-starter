@@ -5,3 +5,5 @@ dist
 # Husky
 .husky/**
 !.husky/pre-commit
+
+local.db
