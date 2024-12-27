@@ -1,14 +1,29 @@
 import { FastifyInstance } from 'fastify';
 import { db } from '../db/client';
-import { exampleTable } from '../db/schema';
+import { ExampleSchema, examples } from '../db/schema';
 import { z } from 'zod';
 import { ZodTypeProvider } from 'fastify-type-provider-zod';
+import { getAllResponse } from '../types/responses';
 
 export async function exampleRoutes(fastify: FastifyInstance) {
   const url = '/api/examples';
 
-  fastify.get(url, async () => {
-    return { hello: 'world 2' };
+  fastify.withTypeProvider<ZodTypeProvider>().route({
+    method: 'GET',
+    url,
+    schema: {
+      response: {
+        200: getAllResponse(ExampleSchema),
+      },
+    },
+    handler: async () => {
+      const results = await db.select().from(examples);
+
+      return {
+        results,
+        totalCount: results.length,
+      };
+    },
   });
 
   fastify.withTypeProvider<ZodTypeProvider>().route({
@@ -26,11 +41,11 @@ export async function exampleRoutes(fastify: FastifyInstance) {
     },
     handler: async (req) => {
       const result = await db
-        .insert(exampleTable)
+        .insert(examples)
         .values({
           name: req.body.name,
         })
-        .returning({ insertedId: exampleTable.id });
+        .returning({ insertedId: examples.id });
 
       return result[0];
     },
