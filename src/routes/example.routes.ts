@@ -1,24 +1,38 @@
-import { FastifyInstance, FastifyRequest } from 'fastify';
-import { db } from '../db';
+import { FastifyInstance } from 'fastify';
+import { db } from '../db/client';
 import { exampleTable } from '../db/schema';
+import { z } from 'zod';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
 
 export async function exampleRoutes(fastify: FastifyInstance) {
-  const baseUrl = '/api/examples';
+  const url = '/api/examples';
 
-  fastify.get(baseUrl, async () => {
+  fastify.get(url, async () => {
     return { hello: 'world 2' };
   });
 
-  fastify.post(baseUrl, async (request: FastifyRequest) => {
-    const name = (request.body as { name: string }).name;
+  fastify.withTypeProvider<ZodTypeProvider>().route({
+    method: 'POST',
+    url,
+    schema: {
+      body: z.object({
+        name: z.string().min(1),
+      }),
+      response: {
+        200: z.object({
+          insertedId: z.number(),
+        }),
+      },
+    },
+    handler: async (req) => {
+      const result = await db
+        .insert(exampleTable)
+        .values({
+          name: req.body.name,
+        })
+        .returning({ insertedId: exampleTable.id });
 
-    const result = await db
-      .insert(exampleTable)
-      .values({
-        name,
-      })
-      .returning({ insertedId: exampleTable.id });
-
-    return result[0];
+      return result[0];
+    },
   });
 }
