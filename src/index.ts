@@ -1,12 +1,11 @@
 import Fastify from 'fastify';
+import { exampleRoutes } from './routes/example.routes';
 
 const fastify = Fastify({
   logger: true,
 });
 
-fastify.get('/', async () => {
-  return { hello: 'world' };
-});
+fastify.register(exampleRoutes);
 
 const start = async () => {
   try {
