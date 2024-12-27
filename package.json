@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "description": "<$description>",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "pnpm run clean && tsc",
     "clean": "rimraf ./dist",
+    "dev": "nodemon src/index.ts",
     "lint": "eslint",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,12 +16,18 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^9.16.0",
+    "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
     "eslint": "^9.16.0",
     "globals": "^15.13.0",
+    "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.17.0"
+  },
+  "dependencies": {
+    "fastify": "^5.2.0"
   }
 }
