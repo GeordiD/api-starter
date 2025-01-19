@@ -4,6 +4,8 @@ import {
   serializerCompiler,
   validatorCompiler,
 } from 'fastify-type-provider-zod';
+import { authRoutes } from '../routes/auth.routes';
+import { accountRoutes } from '../routes/account.routes';
 
 const app = Fastify({
   logger: true,
@@ -15,6 +17,8 @@ app.setSerializerCompiler(serializerCompiler);
 
 // Register Routes
 app.register(exampleRoutes);
+app.register(authRoutes);
+app.register(accountRoutes);
 
 export const initServer = async () => {
   try {
