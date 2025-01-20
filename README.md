@@ -9,6 +9,7 @@ Includes:
 - ✅ Drizzle with SqlLite
 - ✅ ESLint
 - ✅ Prettier
+- ✅ Auth via username/password
 - ❌ Unit Tests
 
 ## Database
