@@ -6,9 +6,13 @@ import {
 } from 'fastify-type-provider-zod';
 import { authRoutes } from '../routes/auth.routes';
 import { setupAuth } from './auth';
+import { setupLogger } from './setupLogger';
+
+const env =
+  process.env.ENVIRONMENT === 'development' ? 'development' : 'production';
 
 const app = Fastify({
-  logger: true,
+  logger: setupLogger(env),
 });
 
 setupAuth(app);
