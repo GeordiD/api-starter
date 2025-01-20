@@ -1,48 +1,37 @@
-import fastifyPassport from '@fastify/passport';
-import fastifySecureSession from '@fastify/secure-session';
-import { FastifyInstance } from 'fastify';
-import { Strategy as LocalStrategy } from 'passport-local';
-import { db } from '../db/client';
-import { FullUser, User, users } from '../db/schema';
-import { eq } from 'drizzle-orm';
-import bcrypt from 'bcrypt';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import auth from '@fastify/auth';
+import jwt, { FastifyJWT } from '@fastify/jwt';
+import cookie from '@fastify/cookie';
 
-const cleanUser = (fullUser: FullUser) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordSalt, ...cleanUser } = fullUser;
-  return cleanUser;
-};
-
-export function setupAuth(server: FastifyInstance) {
-  // set up secure sessions for @fastify/passport to store data in
-  server.register(fastifySecureSession, {
-    key: process.env.SESSION_SECRET ?? '',
+export function setupAuth(fastify: FastifyInstance) {
+  fastify.register(jwt, {
+    secret: '123456',
   });
-  // initialize @fastify/passport and connect it to the secure-session storage. Note: both of these plugins are mandatory.
-  server.register(fastifyPassport.initialize());
-  server.register(fastifyPassport.secureSession());
 
-  fastifyPassport.use(
-    'login',
-    new LocalStrategy(async function (email, password, done) {
-      try {
-        const user = await db.query.users.findFirst({
-          where: eq(users.email, email),
-        });
+  fastify.register(auth);
 
-        if (!user || !user.passwordSalt) {
-          done(null, false);
-          return;
-        }
+  fastify.addHook('preHandler', (req, res, next) => {
+    req.jwt = fastify.jwt;
+    return next();
+  });
 
-        if (!(await bcrypt.compare(password, user.passwordSalt))) {
-          done(null, false);
-        }
+  // cookies
+  fastify.register(cookie, {
+    secret: 'some-secret-key',
+    hook: 'preHandler',
+  });
 
-        done(null, cleanUser(user) as User);
-      } catch (err) {
-        done(err);
+  fastify.decorate(
+    'authenticate',
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const token = req.cookies.access_token;
+
+      if (!token) {
+        return reply.status(401).send({ message: 'Authentication required' });
       }
-    })
+      // here decoded will be a different type by default but we want it to be of user-payload type
+      const decoded = req.jwt.verify<FastifyJWT['user']>(token);
+      req.user = decoded;
+    }
   );
 }

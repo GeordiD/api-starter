@@ -5,20 +5,27 @@ import {
   validatorCompiler,
 } from 'fastify-type-provider-zod';
 import { authRoutes } from '../routes/auth.routes';
-import { accountRoutes } from '../routes/account.routes';
+import { setupAuth } from './auth';
 
 const app = Fastify({
   logger: true,
 });
 
+setupAuth(app);
+
 // Add schema validator and serializer
 app.setValidatorCompiler(validatorCompiler);
 app.setSerializerCompiler(serializerCompiler);
 
-// Register Routes
-app.register(exampleRoutes);
+app.register((instance) => {
+  instance.addHook('preHandler', app.authenticate);
+
+  // Protected Routes
+  app.register(exampleRoutes);
+});
+
+// Unprotected Routes
 app.register(authRoutes);
-app.register(accountRoutes);
 
 export const initServer = async () => {
   try {
